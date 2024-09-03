@@ -192,7 +192,7 @@ from logger import get_logger
 logger = get_logger(__name__)
 
 st.title("Stock Analysis and Prediction")
-
+st.write("This project was created by Nandan and is for educational purposes only.")
 # User inputs
 ticker = st.text_input("Enter Stock Ticker Symbol:", value='SBILIFE.NS')
 start_date = st.date_input("Start Date", value=pd.to_datetime('2021-01-01'))
@@ -344,3 +344,5 @@ with tab2:
     else:
         st.error("Failed to fetch data. Please check the stock ticker symbol and date range.")
         logger.error("Failed to fetch data. Please check the stock ticker symbol and date range.")
+            
+st.markdown("❤️ Made with love by Nandan")
