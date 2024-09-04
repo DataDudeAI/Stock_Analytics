@@ -153,7 +153,7 @@ elif page == "Dashboard":
     # Display the main dashboard
     display_dashboard()
 
-    st.write("<div style='background-color: black; color: white; padding: 10px;'>Coming Soon A lot Updates.......</div>", unsafe_allow_html=True)
+    st.write("<div style='background-color: black; color: white; padding: 10px;'>Big Updates Coming Soon! Stay tuned for exciting new features and improvements.......</div>", unsafe_allow_html=True)
     
 elif page == "Profile":
     st.image("https://via.placeholder.com/150", caption="User Profile Photo")
