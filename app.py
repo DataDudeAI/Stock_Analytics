@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -11,160 +10,189 @@ from visualizations import (
     plot_feature_correlations
 )
 from sklearn.metrics import ConfusionMatrixDisplay
-
+from ui import display_analysis
 from logger import get_logger
+
+from dashboard import display_dashboard
 
 logger = get_logger(__name__)
 
 st.title("Stock Analysis and Prediction")
 
-# User inputs
-ticker = st.text_input("Enter Stock Ticker Symbol:", value='SBILIFE.NS')
-start_date = st.date_input("Start Date", value=pd.to_datetime('2021-01-01'))
-end_date = st.date_input("End Date", value=pd.to_datetime('2024-09-01'))
-algorithm = st.selectbox("Select Prediction Algorithm", ['Linear Regression', 'Decision Tree', 'Random Forest', 'XGBoost', 'CatBoost', 'LSTM', 'ARIMA', 'SARIMA'])
+
+
+# Sidebar for navigation
+st.sidebar.title("Navigation")
+
+# Initialize `page` to "Analytics" by default
+if 'page' not in st.session_state:
+    st.session_state['page'] = "Analytics"
+
+if st.sidebar.button("Analytics"):
+    st.session_state['page'] = "Analytics"
+if st.sidebar.button("Dashboard"):
+    st.session_state['page'] = "Dashboard"
+if st.sidebar.button("Profile"):
+    st.session_state['page'] = "Profile"
+
+page = st.session_state['page']
 
 # Function to fetch and prepare data
 def get_data():
+    ticker = st.session_state.get('ticker')
+    start_date = st.session_state.get('start_date')
+    end_date = st.session_state.get('end_date')
+    
     try:
         data = fetch_data(ticker, start_date, end_date)
         if data is not None:
             data = calculate_indicators(data)
             return data
         else:
-            logger.error("Failed to fetch data. Please check the stock ticker symbol and date range.")
             st.error("Failed to fetch data. Please check the stock ticker symbol and date range.")
             return None
     except Exception as e:
-        logger.error(f"An error occurred: {e}")
         st.error(f"An error occurred: {e}")
         return None
 
-# Tabs for different functionalities
-tab1, tab2 = st.tabs(["Analysis", "Visualization"])
+# Display content based on selected page
+if page == "Analytics":
+    st.header("Analytics")
 
-with tab1:
-    if st.button("Analyze"):
+    # Data input section
+    ticker = st.text_input("Stock Ticker", "BHEL.NS")
+    start_date = st.date_input("Start Date", pd.to_datetime("2020-01-01"))
+    end_date = st.date_input("End Date", pd.to_datetime("2024-09-04"))
+    algorithm = st.selectbox(
+        "Choose an Algorithm",
+        ["Linear Regression", "Random Forest", "Support Vector Machine"]
+    )
+    st.session_state['ticker'] = ticker
+    st.session_state['start_date'] = start_date
+    st.session_state['end_date'] = end_date
+    st.session_state['algorithm'] = algorithm
+
+    # Tabs for Analyze and Visualization under Analytics
+    tab1, tab2 = st.tabs(["Analyze", "Visualization"])
+
+    # Analyze Tab
+    with tab1:
+        if st.button("Analyze"):
+            data = get_data()
+            if data is not None:
+                display_analysis(data, st.session_state.get('algorithm'))
+
+    # Visualization Tab
+    with tab2:
+        st.write("### Visualizations")
+        
+        # Fetch and prepare data for visualization
         data = get_data()
         if data is not None:
+            indicators = {
+                'SMA_50': data['SMA_50'],
+                'EMA_50': data['EMA_50'],
+                'RSI': data['RSI'],
+                'MACD': data['MACD'],
+                'MACD_Signal': data['MACD_Signal'],
+                'Bollinger_High': data['Bollinger_High'],
+                'Bollinger_Low': data['Bollinger_Low'],
+                'ATR': data['ATR'],
+                'OBV': data['OBV']
+            }
+            
+            # Visualization choices
+            choice = st.selectbox(
+                "Choose a type of visualization",
+                [
+                    "Stock Price","Volume",
+                    "Moving Averages",
+                    "Feature Correlations",
+                    "Predictions vs Actual",
+                    "Technical Indicators",
+                    "Risk Levels",
+                    "Feature Importance",
+                    "Candlestick"
+                ]
+            )
+            
             try:
-                # Calculate support and resistance
-                support_price, resistance_price = calculate_support_resistance(data)
-
-                # Predict future price
-                future_prices, mae, r2, accuracy, conf_matrix = predict_future_prices(data, algorithm)
-
-                if future_prices is not None:
-                    # Display technical indicators with Hinglish explanations
-                    st.write("### Technical Indicators")
-                    st.write(f"SMA_50 (50-day Simple Moving Average): {data['SMA_50'].iloc[-1]:.2f}")
-                    st.write("**SMA_50**: Yeh 50 din ka average hai jo bataata hai stock ka long-term trend. Agar yeh price line se upar hai, toh stock ka trend upward hai.")
-                    st.write(f"EMA_50 (50-day Exponential Moving Average): {data['EMA_50'].iloc[-1]:.2f}")
-                    st.write("**EMA_50**: Yeh bhi ek average hai lekin recent prices ko zyada weightage deta hai. Stock ka short-term trend dikhata hai.")
-                    st.write(f"RSI (Relative Strength Index): {data['RSI'].iloc[-1]:.2f}")
-                    st.write("**RSI**: Yeh indicator stock ke overbought ya oversold condition ko dikhata hai. 70 se zyada overbought, aur 30 se kam oversold hai.")
-                    st.write(f"MACD: {data['MACD'].iloc[-1]:.2f}")
-                    st.write("**MACD**: Yeh indicator short-term aur long-term moving averages ke beech ka difference dikhata hai.")
-                    st.write(f"MACD Signal: {data['MACD_Signal'].iloc[-1]:.2f}")
-                    st.write("**MACD Signal**: Yeh line MACD ke signal ko dikhata hai. Jab MACD line isse cross karti hai, toh trend change hota hai.")
-                    st.write(f"Bollinger High: {data['Bollinger_High'].iloc[-1]:.2f}")
-                    st.write("**Bollinger High**: Yeh line stock price ki upper boundary dikhati hai. Agar price isse upar hai, toh stock overbought ho sakta hai.")
-                    st.write(f"Bollinger Low: {data['Bollinger_Low'].iloc[-1]:.2f}")
-                    st.write("**Bollinger Low**: Yeh line stock price ki lower boundary dikhati hai. Agar price isse neeche hai, toh stock oversold ho sakta hai.")
-                    st.write(f"ATR (Average True Range): {data['ATR'].iloc[-1]:.2f}")
-                    st.write("**ATR**: Yeh indicator stock ki volatility dikhata hai. Zyada ATR matlab zyada price fluctuations.")
-                    st.write(f"OBV (On-Balance Volume): {data['OBV'].iloc[-1]:.2f}")
-                    st.write("**OBV**: Yeh volume aur price ke relationship ko dikhata hai. Jab OBV badh raha hai, toh stock ka demand badh raha hai.")
-                    
-                    st.write("### Support and Resistance Levels")
-                    st.write(f"Support Price: {support_price:.2f}")
-                    st.write(f"Resistance Price: {resistance_price:.2f}")
-                    
-                    st.write("### Future Price Predictions")
-                    for i, price in enumerate(future_prices):
-                        st.write(f"Day {i+1}: {price:.2f}")
-                    
-                    if accuracy is not None and conf_matrix is not None:
-                        st.write(f"**Model Accuracy:** {accuracy:.2f}")
-                        st.write("**Accuracy**: Yeh metric dikhata hai ki model ne sahi predictions kitne percentage bar kiye hain.")
-                        st.write("**Confusion Matrix:**")
-                        st.pyplot(ConfusionMatrixDisplay(conf_matrix).plot())
-                        
-                    if mae is not None and r2 is not None:
-                        st.write(f"**Mean Absolute Error (MAE):** {mae:.2f}")
-                        st.write("**MAE**: Yeh average error hai jo model ke predictions aur actual values ke beech ka difference dikhata hai.")
-                        st.write(f"**R-squared (R2):** {r2:.2f}")
-                        st.write("**R2**: Yeh metric dikhata hai ki model ne data ke variation ko kitna achhe se explain kiya hai. 1 ka matlab perfect fit hai.")
-                else:
-                    st.error("Model selection or prediction failed. Please check your inputs and try again.")
-                    logger.error("Model selection or prediction failed. Please check inputs and try again.")
+                if choice == "Stock Price":
+                    plot_stock_price(data, st.session_state.get('ticker'), indicators)
+                elif choice == "Predictions vs Actual":
+                    future_prices, _, _, _, _ = predict_future_prices(data, st.session_state.get('algorithm'))
+                    if future_prices is not None:
+                        st.line_chart(pd.DataFrame({'Actual Prices': data['Close'], 'Predicted Prices': pd.Series(future_prices).values}))
+                    else:
+                        st.error("Failed to fetch predictions.")
+                        logger.error("Failed to fetch predictions.")
+                elif choice == "Technical Indicators":
+                    plot_technical_indicators(data, indicators)
+                elif choice == "Risk Levels":
+                    plot_risk_levels(data)
+                elif choice == "Feature Importance":
+                    plot_feature_importance()
+                elif choice == "Candlestick":
+                    plot_candlestick(data)
+                elif choice == "Volume":
+                    plot_volume(data)
+                elif choice == "Moving Averages":
+                    plot_moving_averages(data)
+                elif choice == "Feature Correlations":
+                    plot_feature_correlations(data)
             except Exception as e:
-                logger.error(f"An error occurred during analysis: {e}")
-                st.error(f"An error occurred during analysis: {e}")
+                logger.error(f"An error occurred during visualization: {e}")
+                st.error(f"An error occurred during visualization: {e}")
         else:
             st.error("Failed to fetch data. Please check the stock ticker symbol and date range.")
             logger.error("Failed to fetch data. Please check the stock ticker symbol and date range.")
 
-with tab2:
-    st.write("### Visualizations")
+elif page == "Dashboard":
     
-    # Fetch and prepare data for visualization
-    data = get_data()
-    if data is not None:
-        indicators = {
-            'SMA_50': data['SMA_50'],
-            'EMA_50': data['EMA_50'],
-            'RSI': data['RSI'],
-            'MACD': data['MACD'],
-            'MACD_Signal': data['MACD_Signal'],
-            'Bollinger_High': data['Bollinger_High'],
-            'Bollinger_Low': data['Bollinger_Low'],
-            'ATR': data['ATR'],
-            'OBV': data['OBV']
-        }
-        
-        # Visualization choices
-        choice = st.selectbox(
-            "Choose a type of visualization",
-            [
-                "Stock Price", "Volume",
-                "Moving Averages",
-                "Feature Correlations",
-                "Predictions vs Actual",
-                "Technical Indicators",
-                "Risk Levels",
-                "Feature Importance",
-                "Candlestick"
-            ]
-        )
-        
-        try:
-            if choice == "Stock Price":
-                plot_stock_price(data, ticker, indicators)
-            elif choice == "Predictions vs Actual":
-                future_prices, _, _, _, _ = predict_future_prices(data, algorithm)
-                if future_prices is not None:
-                    st.line_chart(pd.DataFrame({'Actual Prices': data['Close'], 'Predicted Prices': pd.Series(future_prices).values}))
-                else:
-                    st.error("Failed to fetch predictions.")
-                    logger.error("Failed to fetch predictions.")
-            elif choice == "Technical Indicators":
-                plot_technical_indicators(data, indicators)
-            elif choice == "Risk Levels":
-                plot_risk_levels(data)
-            elif choice == "Feature Importance":
-                plot_feature_importance()
-            elif choice == "Candlestick":
-                plot_candlestick(data)
-            elif choice == "Volume":
-                plot_volume(data)
-            elif choice == "Moving Averages":
-                plot_moving_averages(data)
-            elif choice == "Feature Correlations":
-                plot_feature_correlations(data)
-        except Exception as e:
-            logger.error(f"An error occurred during visualization: {e}")
-            st.error(f"An error occurred during visualization: {e}")
-    else:
-        st.error("Failed to fetch data. Please check the stock ticker symbol and date range.")
-        logger.error("Failed to fetch data. Please check the stock ticker symbol and date range.")
+    
+    # Display the main dashboard
+    display_dashboard()
+
+    st.write("<div style='background-color: black; color: white; padding: 10px;'>Coming Soon A lot Updates.......</div>", unsafe_allow_html=True)
+    
+elif page == "Profile":
+    st.image("https://via.placeholder.com/150", caption="User Profile Photo")
+    st.write("### User Profile")
+    st.write("Name: Nandan Dutta")
+    st.write("Role: Data Analyst")
+    st.write("Email: n.dutta25@gmail.com")
+
+
+
+
+st.markdown(
+    """
+    <style>
+    @keyframes blink {
+        0% { opacity: 1; }
+        50% { opacity: 0; }
+        100% { opacity: 1; }
+    }
+    .blinking-heart {
+        animation: blink 1s infinite;
+    }
+    </style>
+    <div style='background-color: #f1f1f1; color: #333; padding: 5px; text-align: center; border-top: 1px solid #ddd;'>
+        <p>Made with <span class="blinking-heart">❤️</span> from Nandan</p>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
+
+# Display animated running disclaimer text
+st.write(
+    """
+    <div style='background-color: black; color: white; padding: 10px; border-radius: 5px;'>
+        <marquee behavior="scroll" direction="left" scrollamount="5" style="font-size: 14px;">
+            This project is for educational purposes only. The information provided here should not be used for real investment decisions. Please perform your own research and consult with a financial advisor before making any investment decisions. Use this information at your own risk.
+        </marquee>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
