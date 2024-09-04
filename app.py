@@ -40,7 +40,7 @@ if 'page' not in st.session_state:
 if st.sidebar.button("Analytics"):
     st.session_state['page'] = "Analytics"
 if st.sidebar.button("Ask to AI"):
-    st.session_state['page'] = "Ask AI"
+    st.session_state['page'] = "Ask to AI"
 if st.sidebar.button("Dashboard"):
     st.session_state['page'] = "Dashboard"
 if st.sidebar.button("Profile"):
