@@ -103,5 +103,106 @@ def display_dashboard():
             df_losers_large_cap = pd.DataFrame(top_losers_large_cap, columns=['Ticker', 'Percentage Change'])
             df_losers_large_cap['Percentage Change'] = df_losers_large_cap['Percentage Change'].astype(float)
             st.dataframe(df_losers_large_cap.style.applymap(lambda x: 'color: red' if isinstance(x, (int, float)) and x < 0 else 'color: green'))
+
+# Profile
+def fetch_stock_profile(ticker):
+    try:
+        stock = yf.Ticker(ticker)
+        info = stock.info
+
+        profile = {
+            "Name": info.get('longName', 'N/A'),
+            "Current Price": f"₹ {info.get('currentPrice', 'N/A')}",
+            "Percentage Change": f"{info.get('dayChangePercent', 'N/A')}%",
+            "Last Updated": datetime.now().strftime('%d %b %H:%M %p'),
+            "Website": info.get('website', 'N/A'),
+            "BSE Code": info.get('symbol', 'N/A'),
+            "NSE Code": info.get('symbol', 'N/A'),
+            "Market Cap": f"₹ {info.get('marketCap', 'N/A') / 1e7:.2f} Cr.",
+            "High / Low": f"₹ {info.get('dayHigh', 'N/A')} / ₹ {info.get('dayLow', 'N/A')}"
+        }
+        return profile
+    except Exception as e:
+        st.error(f"Error fetching profile for {ticker}: {e}")
+        return {}
+
+
+import streamlit as st
+import yfinance as yf
+import pandas as pd
+
+# Function to fetch and display stock profile
+def fetch_stock_profile(ticker):
+    stock = yf.Ticker(ticker)
+    profile = {}
+    try:
+        info = stock.info
+        profile['Name'] = info.get('shortName', 'N/A')
+        profile['Current Price'] = info.get('currentPrice', 'N/A')
+        profile['Market Cap'] = info.get('marketCap', 'N/A')
+        profile['P/E Ratio'] = info.get('forwardEps', 'N/A')
+        profile['Book Value'] = info.get('bookValue', 'N/A')
+        profile['Dividend Yield'] = info.get('dividendYield', 'N/A')
+        profile['ROCE'] = info.get('returnOnCapitalEmployed', 'N/A')
+        profile['ROE'] = info.get('returnOnEquity', 'N/A')
+        profile['Face Value'] = info.get('faceValue', 'N/A')
+    except Exception as e:
+        st.write("Error fetching stock profile:", e)
+    return profile
+
+# Function to display stock profile as a table
+def display_profile(profile):
+    st.subheader("Stock Profile")
+    profile_df = pd.DataFrame([profile])
+    st.table(profile_df)
+
+# Function to fetch and display quarterly results
+def display_quarterly_results(ticker):
+    st.subheader("Quarterly Results Summary")
+    stock = yf.Ticker(ticker)
+    
+    try:
+        financials = stock.quarterly_financials.T
+        if not financials.empty:
+            results = {
+                'Sales': financials['Total Revenue'].iloc[-1] if 'Total Revenue' in financials.columns else 'N/A',
+                'Operating Profit Margin': financials['Operating Income'].iloc[-1] if 'Operating Income' in financials.columns else 'N/A',
+                'Net Profit': financials['Net Income'].iloc[-1] if 'Net Income' in financials.columns else 'N/A'
+            }
+            results_df = pd.DataFrame([results])
+            st.table(results_df)
+        else:
+            st.write("No quarterly results available.")
+    except Exception as e:
+        st.write("Error fetching quarterly results:", e)
+
+# Function to fetch and display shareholding pattern
+def display_shareholding_pattern(ticker):
+    st.subheader("Shareholding Pattern")
+    
+    # Placeholder values, replace with actual API or data source call
+    data = {
+        'Category': ['Promoters', 'FIIs (Foreign Institutional Investors)', 'DIIs (Domestic Institutional Investors)', 'Public'],
+        'Percentage': ['63.17%', '9.10%', '15.03%', '12.71%']
+    }
+    df = pd.DataFrame(data)
+    st.table(df)
+
+# Function to fetch and display financial ratios
+def display_financial_ratios(ticker):
+    st.subheader("Financial Ratios")
+    stock = yf.Ticker(ticker)
+    
+    try:
+        # Placeholder values, calculate actual values based on your requirements
+        ratios = {
+            'Debtor Days': 73,
+            'Working Capital Days': 194,
+            'Cash Conversion Cycle': 51
+        }
+        ratios_df = pd.DataFrame([ratios])
+        st.table(ratios_df)
+    except Exception as e:
+        st.write("Error fetching financial ratios:", e)
     
     # Add sections for Small Cap Top Gainers and Losers in similar manner if needed
