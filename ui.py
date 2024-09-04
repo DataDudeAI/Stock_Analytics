@@ -12,7 +12,7 @@ def sidebar():
     ticker = st.sidebar.text_input("Enter Stock Ticker Symbol:", value='SBILIFE.NS')
     start_date = st.sidebar.date_input("Start Date", value=pd.to_datetime('2021-01-01'))
     end_date = st.sidebar.date_input("End Date", value=pd.to_datetime('2024-09-01'))
-    algorithm = st.sidebar.selectbox("Select Prediction Algorithm", ['Linear Regression', 'Decision Tree', 'Random Forest', 'XGBoost', 'CatBoost', 'LSTM', 'ARIMA', 'SARIMA'])
+    algorithm = st.sidebar.selectbox("Select Prediction Algorithm", ['Linear Regression', 'ARIMA','Decision Tree', 'Random Forest', 'XGBoost', 'CatBoost', 'LSTM', 'SARIMA'])
     return ticker, start_date, end_date, algorithm
 
 def display_analysis(data, algorithm):
