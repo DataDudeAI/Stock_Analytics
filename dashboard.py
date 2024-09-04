@@ -3,6 +3,7 @@ import pandas as pd
 import streamlit as st
 from datetime import datetime, timedelta
 
+# Fetch Nifty 50 tickers
 def fetch_nifty50_tickers():
     return [
         "TATAMOTORS.NS", "RELIANCE.NS", "INFY.NS", "HDFCBANK.NS", "ICICIBANK.NS",
@@ -11,24 +12,16 @@ def fetch_nifty50_tickers():
         "L&T.NS", "M&M.NS", "ONGC.NS", "HDFCLIFE.NS", "ULTRACEMCO.NS",
         "ADANIGREEN.NS", "BHARTIARTL.NS", "BAJAJFINSV.NS", "JSWSTEEL.NS", "DIVISLAB.NS",
         "POWERGRID.NS", "KOTAKBANK.NS", "HINDUNILVR.NS", "TCS.NS", "CIPLA.NS",
-        "ASIANPAINT.NS", "GRASIM.NS", "HDFCBANK.NS", "BRITANNIA.NS", "SHREECEM.NS",
+        "ASIANPAINT.NS", "GRASIM.NS", "BRITANNIA.NS", "SHREECEM.NS",
         "TECHM.NS", "INDUSINDBK.NS", "EICHERMOT.NS", "COALINDIA.NS", "GAIL.NS",
-        "BOSCHLTD.NS", "M&MFIN.NS", "IDFCFIRSTB.NS", "HAVELLS.NS", "RELIANCE.NS"
+        "BOSCHLTD.NS", "M&MFIN.NS", "IDFCFIRSTB.NS", "HAVELLS.NS"
     ]
 
+# Fetch large cap tickers
 def fetch_large_cap_tickers():
-    return [
-        "TATAMOTORS.NS", "RELIANCE.NS", "INFY.NS", "HDFCBANK.NS", "ICICIBANK.NS",
-        "L&T.NS", "HDFC.NS", "ITC.NS", "AXISBANK.NS", "MARUTI.NS",
-        "TATASTEEL.NS", "WIPRO.NS", "SUNPHARMA.NS", "HINDALCO.NS", "HCLTECH.NS",
-        "NTPC.NS", "M&M.NS", "ONGC.NS", "HDFCLIFE.NS", "ULTRACEMCO.NS",
-        "ADANIGREEN.NS", "BHARTIARTL.NS", "BAJAJFINSV.NS", "JSWSTEEL.NS", "DIVISLAB.NS",
-        "POWERGRID.NS", "KOTAKBANK.NS", "HINDUNILVR.NS", "TCS.NS", "CIPLA.NS",
-        "ASIANPAINT.NS", "GRASIM.NS", "HDFCBANK.NS", "BRITANNIA.NS", "SHREECEM.NS",
-        "TECHM.NS", "INDUSINDBK.NS", "EICHERMOT.NS", "COALINDIA.NS", "GAIL.NS",
-        "BOSCHLTD.NS", "M&MFIN.NS", "IDFCFIRSTB.NS", "HAVELLS.NS", "RELIANCE.NS"
-    ]
+    return fetch_nifty50_tickers()  # Assuming large caps are the same as Nifty 50
 
+# Fetch small cap tickers
 def fetch_small_cap_tickers():
     return [
         "ALOKINDS.NS", "ADANIENT.NS", "AARTIIND.NS", "AVANTIFEED.NS", "BLS.IN",
@@ -40,6 +33,7 @@ def fetch_small_cap_tickers():
         "VSTIND.NS", "WABCOINDIA.NS", "WELCORP.NS", "ZEELEARN.NS", "ZOMATO.NS"
     ]
 
+# Get top movers
 def get_top_movers(tickers, days=1):
     end_date = datetime.now()
     start_date = end_date - timedelta(days=days)
@@ -48,7 +42,7 @@ def get_top_movers(tickers, days=1):
     for ticker in tickers:
         try:
             df = yf.download(ticker, start=start_date, end=end_date)
-            if not df.empty:
+            if not df.empty and 'Close' in df.columns:
                 df['Ticker'] = ticker
                 data[ticker] = df['Close'].pct_change().iloc[-1]  # Percentage change
         except Exception as e:
@@ -60,6 +54,14 @@ def get_top_movers(tickers, days=1):
     
     return top_gainers, top_losers
 
+# Format DataFrame with color
+def format_df(df):
+    if not df.empty:
+        df['Percentage Change'] = pd.to_numeric(df['Percentage Change'], errors='coerce')
+        return df.style.applymap(lambda x: 'color: green' if x > 0 else 'color: red', subset=['Percentage Change'])
+    return df
+
+# Display dashboard
 def display_dashboard():
     st.header("Dashboard")
     
@@ -80,46 +82,42 @@ def display_dashboard():
         st.write("### Nifty 50 Top Gainers")
         if top_gainers_nifty50:
             df_gainers_nifty50 = pd.DataFrame(top_gainers_nifty50, columns=['Ticker', 'Percentage Change'])
-            df_gainers_nifty50['Percentage Change'] = df_gainers_nifty50['Percentage Change'].astype(float)
-            st.dataframe(df_gainers_nifty50.style.applymap(lambda x: 'color: green' if isinstance(x, (int, float)) and x > 0 else 'color: red'))
+            st.dataframe(format_df(df_gainers_nifty50))
 
     with col2:
         st.write("### Nifty 50 Top Losers")
         if top_losers_nifty50:
             df_losers_nifty50 = pd.DataFrame(top_losers_nifty50, columns=['Ticker', 'Percentage Change'])
-            df_losers_nifty50['Percentage Change'] = df_losers_nifty50['Percentage Change'].astype(float)
-            st.dataframe(df_losers_nifty50.style.applymap(lambda x: 'color: red' if isinstance(x, (int, float)) and x < 0 else 'color: green'))
+            st.dataframe(format_df(df_losers_nifty50))
 
     with col3:
         st.write("### Large Cap Top Gainers")
         if top_gainers_large_cap:
             df_gainers_large_cap = pd.DataFrame(top_gainers_large_cap, columns=['Ticker', 'Percentage Change'])
-            df_gainers_large_cap['Percentage Change'] = df_gainers_large_cap['Percentage Change'].astype(float)
-            st.dataframe(df_gainers_large_cap.style.applymap(lambda x: 'color: green' if isinstance(x, (int, float)) and x > 0 else 'color: red'))
+            st.dataframe(format_df(df_gainers_large_cap))
 
     with col4:
         st.write("### Large Cap Top Losers")
         if top_losers_large_cap:
             df_losers_large_cap = pd.DataFrame(top_losers_large_cap, columns=['Ticker', 'Percentage Change'])
-            df_losers_large_cap['Percentage Change'] = df_losers_large_cap['Percentage Change'].astype(float)
-            st.dataframe(df_losers_large_cap.style.applymap(lambda x: 'color: red' if isinstance(x, (int, float)) and x < 0 else 'color: green'))
+            st.dataframe(format_df(df_losers_large_cap))
 
-# Profile
+# Fetch and display stock profile
 def fetch_stock_profile(ticker):
     try:
         stock = yf.Ticker(ticker)
         info = stock.info
 
         profile = {
-            "Name": info.get('longName', 'N/A'),
+            "Name": info.get('shortName', 'N/A'),
             "Current Price": f"₹ {info.get('currentPrice', 'N/A')}",
-            "Percentage Change": f"{info.get('dayChangePercent', 'N/A')}%",
-            "Last Updated": datetime.now().strftime('%d %b %H:%M %p'),
-            "Website": info.get('website', 'N/A'),
-            "BSE Code": info.get('symbol', 'N/A'),
-            "NSE Code": info.get('symbol', 'N/A'),
             "Market Cap": f"₹ {info.get('marketCap', 'N/A') / 1e7:.2f} Cr.",
-            "High / Low": f"₹ {info.get('dayHigh', 'N/A')} / ₹ {info.get('dayLow', 'N/A')}"
+            "P/E Ratio": info.get('forwardEps', 'N/A'),
+            "Book Value": info.get('bookValue', 'N/A'),
+            "Dividend Yield": info.get('dividendYield', 'N/A'),
+            "ROCE": info.get('returnOnCapitalEmployed', 'N/A'),
+            "ROE": info.get('returnOnEquity', 'N/A'),
+            "Face Value": info.get('faceValue', 'N/A')
         }
         return profile
     except Exception as e:
@@ -127,41 +125,19 @@ def fetch_stock_profile(ticker):
         return {}
 
 
-import streamlit as st
-import yfinance as yf
-import pandas as pd
 
-# Function to fetch and display stock profile
-def fetch_stock_profile(ticker):
-    stock = yf.Ticker(ticker)
-    profile = {}
-    try:
-        info = stock.info
-        profile['Name'] = info.get('shortName', 'N/A')
-        profile['Current Price'] = info.get('currentPrice', 'N/A')
-        profile['Market Cap'] = info.get('marketCap', 'N/A')
-        profile['P/E Ratio'] = info.get('forwardEps', 'N/A')
-        profile['Book Value'] = info.get('bookValue', 'N/A')
-        profile['Dividend Yield'] = info.get('dividendYield', 'N/A')
-        profile['ROCE'] = info.get('returnOnCapitalEmployed', 'N/A')
-        profile['ROE'] = info.get('returnOnEquity', 'N/A')
-        profile['Face Value'] = info.get('faceValue', 'N/A')
-    except Exception as e:
-        st.write("Error fetching stock profile:", e)
-    return profile
 
-# Function to display stock profile as a table
+# Display stock profile as a table
 def display_profile(profile):
     st.subheader("Stock Profile")
     profile_df = pd.DataFrame([profile])
     st.table(profile_df)
 
-# Function to fetch and display quarterly results
+# Fetch and display quarterly results
 def display_quarterly_results(ticker):
     st.subheader("Quarterly Results Summary")
-    stock = yf.Ticker(ticker)
-    
     try:
+        stock = yf.Ticker(ticker)
         financials = stock.quarterly_financials.T
         if not financials.empty:
             results = {
@@ -174,21 +150,22 @@ def display_quarterly_results(ticker):
         else:
             st.write("No quarterly results available.")
     except Exception as e:
-        st.write("Error fetching quarterly results:", e)
+        st.write(f"Error fetching quarterly results: {e}")
 
-# Function to fetch and display shareholding pattern
+# Fetch and display shareholding pattern
 def display_shareholding_pattern(ticker):
     st.subheader("Shareholding Pattern")
     
-    # Placeholder values, replace with actual API or data source call
+    # Placeholder values; replace with actual data source or API call
     data = {
         'Category': ['Promoters', 'FIIs (Foreign Institutional Investors)', 'DIIs (Domestic Institutional Investors)', 'Public'],
-        'Percentage': ['63.17%', '9.10%', '15.03%', '12.71%']
+        'Holding (%)': [45.0, 20.0, 15.0, 20.0]
     }
+    
     df = pd.DataFrame(data)
     st.table(df)
 
-# Function to fetch and display financial ratios
+
 def display_financial_ratios(ticker):
     st.subheader("Financial Ratios")
     stock = yf.Ticker(ticker)
@@ -204,5 +181,41 @@ def display_financial_ratios(ticker):
         st.table(ratios_df)
     except Exception as e:
         st.write("Error fetching financial ratios:", e)
-    
-    # Add sections for Small Cap Top Gainers and Losers in similar manner if needed
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Main application
+# def main():
+#     st.title("Stock Analysis Dashboard")
+
+#     # Select ticker input
+#     ticker = st.text_input("Enter Stock Ticker (e.g., TATAMOTORS.NS)")
+
+#     if ticker:
+#         profile = fetch_stock_profile(ticker)
+#         if profile:
+#             display_profile(profile)
+        
+#         display_quarterly_results(ticker)
+#         display_shareholding_pattern(ticker)
+
+#     # Show dashboard
+#     if st.button("Show Dashboard"):
+#         display_dashboard()
+
+# if __name__ == "__main__":
+#     main()
