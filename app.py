@@ -75,7 +75,7 @@ if page == "Analytics":
     end_date = st.date_input("End Date", pd.to_datetime("2024-09-04"))
     algorithm = st.selectbox(
         "Choose an Algorithm",
-        ["Linear Regression", "Random Forest", "Support Vector Machine"]
+        ['Linear Regression','LSTM', 'ARIMA','Decision Tree', 'Random Forest', 'XGBoost', 'CatBoost', 'SARIMA']
     )
     st.session_state['ticker'] = ticker
     st.session_state['start_date'] = start_date
