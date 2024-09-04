@@ -15,6 +15,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Set environment variable
+        run: |
+          echo "HUGGING_FACE_TOKEN=${HUGGING_FACE_TOKEN}" >> $GITHUB_ENV
+
       - name: Run Python script
         run: |
-          python app.py
+          python /mount/src/stock_analytics/llm.py
