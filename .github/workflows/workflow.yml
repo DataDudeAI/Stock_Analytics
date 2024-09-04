@@ -3,11 +3,7 @@
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set environment variable
+      - name: Run Python script
         run: |
-          echo "HUGGING_FACE_TOKEN=${HUGGING_FACE_TOKEN}" >> $GITHUB_ENV
-
-      - name: Run Python scripts
-        run: |
-          python app.py
-          python /mount/src/stock_analytics/llm.py
+          python app.py --token $HUGGING_FACE_TOKEN
+          python /mount/src/stock_analytics/llm.py --token $HUGGING_FACE_TOKEN
