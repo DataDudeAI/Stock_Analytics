@@ -4,15 +4,16 @@ import requests
 from model import fetch_data, calculate_indicators, calculate_support_resistance
 import os
 
-import argparse
+# import argparse
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--token', required=True)
-args = parser.parse_args()
+# parser = argparse.ArgumentParser()
+# parser.add_argument('--token', required=True)
+# args = parser.parse_args()
 
-API_TOKEN = args.token
+# API_TOKEN = args.token
 # Hugging Face API token and model URL
 # API_TOKEN = os.environ['HUGGING_FACE_TOKEN']
+API_TOKEN ='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'
 API_URL = "https://api-inference.huggingface.co/models/meta-llama/Meta-Llama-3.1-8B-Instruct"
 
 def generate_prompt(ticker, start_date, end_date):
