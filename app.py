@@ -12,8 +12,7 @@ from visualizations import (
 from sklearn.metrics import ConfusionMatrixDisplay
 from ui import display_analysis
 from logger import get_logger
-
-from dashboard import display_dashboard
+from dashboard import display_dashboard, display_profile,fetch_stock_profile,display_quarterly_results, display_shareholding_pattern,display_financial_ratios
 
 logger = get_logger(__name__)
 
@@ -148,6 +147,25 @@ if page == "Analytics":
             logger.error("Failed to fetch data. Please check the stock ticker symbol and date range.")
 
 elif page == "Dashboard":
+
+    st.title("Stock analysis and screening tool for investors in India")
+    
+    ticker = st.text_input("Enter stock ticker (e.g., TATAMOTORS.NS):").upper()
+    days = st.sidebar.slider("Select number of days for top movers:", 1, 30, 30)
+    
+    profile = {}
+    if ticker:
+        profile = fetch_stock_profile(ticker)
+        if profile:  # Only display profile if it's not empty
+            display_profile(profile)
+            display_quarterly_results(ticker)
+            display_shareholding_pattern(ticker)
+            display_financial_ratios(ticker)
+        else:
+            st.write("No data available for the ticker entered.")
+    
+    st.sidebar.write("### Overview")
+    st.sidebar.write(f"Showing top gainers and losers over the past {days} day(s).")
     
     
     # Display the main dashboard
