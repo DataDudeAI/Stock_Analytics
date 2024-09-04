@@ -45,8 +45,6 @@ if st.sidebar.button("Dashboard"):
     st.session_state['page'] = "Dashboard"
 if st.sidebar.button("Profile"):
     st.session_state['page'] = "Profile"
-if st.sidebar.button("Ask AI"):
-    st.session_state['page'] = "Ask AI"
 page = st.session_state['page']
 
 # Function to fetch and prepare data
