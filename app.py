@@ -12,7 +12,9 @@ from visualizations import (
 from sklearn.metrics import ConfusionMatrixDisplay
 from ui import display_analysis
 from logger import get_logger
-from dashboard import display_dashboard,fetch_stock_profile,display_quarterly_results, display_shareholding_pattern,display_financial_ratios,display_profile
+
+from dashboard import display_dashboard, display_profile,fetch_stock_profile,display_quarterly_results, display_shareholding_pattern, display_financial_ratios
+from llm import display_recommendation #analyze_stock_with_llm
 
 logger = get_logger(__name__)
 
@@ -33,7 +35,8 @@ if st.sidebar.button("Dashboard"):
     st.session_state['page'] = "Dashboard"
 if st.sidebar.button("Profile"):
     st.session_state['page'] = "Profile"
-
+if st.sidebar.button("Ask AI"):
+    st.session_state['page'] = "Ask AI"
 page = st.session_state['page']
 
 # Function to fetch and prepare data
@@ -64,7 +67,7 @@ if page == "Analytics":
     end_date = st.date_input("End Date", pd.to_datetime("2024-09-04"))
     algorithm = st.selectbox(
         "Choose an Algorithm",
-        ['Linear Regression', 'ARIMA','Decision Tree', 'Random Forest', 'XGBoost', 'CatBoost', 'LSTM', 'SARIMA']
+        ["Linear Regression", "Random Forest", "Support Vector Machine"]
     )
     st.session_state['ticker'] = ticker
     st.session_state['start_date'] = start_date
@@ -166,12 +169,14 @@ elif page == "Dashboard":
     
     st.sidebar.write("### Overview")
     st.sidebar.write(f"Showing top gainers and losers over the past {days} day(s).")
-    
-    
-    # Display the main dashboard
-    display_dashboard()
 
-    st.write("<div style='background-color: black; color: white; padding: 10px;'>Big Updates Coming Soon! Stay tuned for exciting new features and improvements.......</div>", unsafe_allow_html=True)
+    display_dashboard()
+    
+    # display_profile()
+    # # Display the main dashboard
+    # display_dashboard()
+
+    st.write("<div style='background-color: black; color: white; padding: 10px;'>Coming Soon A lot Updates.......</div>", unsafe_allow_html=True)
     
 elif page == "Profile":
     st.image("https://via.placeholder.com/150", caption="User Profile Photo")
@@ -179,6 +184,36 @@ elif page == "Profile":
     st.write("Name: Nandan Dutta")
     st.write("Role: Data Analyst")
     st.write("Email: n.dutta25@gmail.com")
+
+elif page == "Ask AI":
+    st.title("Ask Stock Recommendation to AI")
+    st.write("Model: Meta LLaMA 3.1")
+
+    # Input fields for the user
+    ticker = st.text_input("Enter Stock Ticker (e.g., AAPL, MSFT):")
+    start_date = st.date_input("Start Date", value=None)
+    end_date = st.date_input("End Date", value=None)
+
+    if st.button("Get Recommendation"):
+        if ticker and start_date and end_date:
+            # Ensure dates are in the correct format
+            start_date_str = start_date.strftime('%Y-%m-%d')
+            end_date_str = end_date.strftime('%Y-%m-%d')
+
+            st.write(f"Fetching recommendation for {ticker} from {start_date_str} to {end_date_str}...")
+
+            try:
+                # Fetch the recommendation using the LLaMA model
+                recommendations = display_recommendation(ticker, start_date_str, end_date_str)
+    
+            except Exception as e:
+                st.error(f"An error occurred: {e}")
+        
+        else:
+            st.error("Please enter a valid ticker and date range.")
+
+
+
 
 
 
@@ -214,3 +249,26 @@ st.write(
     """,
     unsafe_allow_html=True
 )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
