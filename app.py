@@ -129,7 +129,7 @@ with tab2:
             [
                 "Stock Price", "Volume",
                 "Moving Averages",
-                "Feature Correlations"
+                "Feature Correlations",
                 "Predictions vs Actual",
                 "Technical Indicators",
                 "Risk Levels",
