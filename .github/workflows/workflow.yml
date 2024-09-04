@@ -1,17 +1,5 @@
-name: Hugging Face API Workflow
-
-on:
-  push:
-    branches:
-      - main
-
-jobs:
-  hugging-face-api:
-    runs-on: ubuntu-latest
-    env:
-      HUGGING_FACE_TOKEN: ${{ secrets.HUGGING_FACE_TOKEN }}
-
-    steps:
+.github/workflows/workflow.yml
+@@ -15,6 +15,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
@@ -19,6 +7,7 @@ jobs:
         run: |
           echo "HUGGING_FACE_TOKEN=${HUGGING_FACE_TOKEN}" >> $GITHUB_ENV
 
-      - name: Run Python script
+      - name: Run Python scripts
         run: |
+          python app.py
           python /mount/src/stock_analytics/llm.py
