@@ -5,5 +5,5 @@
 
       - name: Run Python script
         run: |
-          python app.py --token $HUGGING_FACE_TOKEN
+          
           python /mount/src/stock_analytics/llm.py --token $HUGGING_FACE_TOKEN
