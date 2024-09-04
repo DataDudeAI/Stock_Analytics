@@ -15,11 +15,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Use Hugging Face API
+      - name: Run Python script
         run: |
-          # Your API call or script using the token
-          curl -X POST \
-          https://api-inference.huggingface.co/models/meta-llama/Meta-Llama-3.1-8B-Instruct \
-          -H 'Authorization: Bearer $HUGGING_FACE_TOKEN' \
-          -H 'Content-Type: application/json' \
-          -d '{"inputs": "Your prompt or input"}'
+          python app.py
