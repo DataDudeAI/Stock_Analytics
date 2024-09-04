@@ -39,7 +39,7 @@ if 'page' not in st.session_state:
 
 if st.sidebar.button("Analytics"):
     st.session_state['page'] = "Analytics"
-if st.sidebar.button("Ask AI"):
+if st.sidebar.button("Ask to AI"):
     st.session_state['page'] = "Ask AI"
 if st.sidebar.button("Dashboard"):
     st.session_state['page'] = "Dashboard"
@@ -193,7 +193,7 @@ elif page == "Profile":
     st.write("Role: Data Analyst")
     st.write("Email: n.dutta25@gmail.com")
 
-elif page == "Ask AI":
+elif page == "Ask to AI":
     st.title("Ask Stock Recommendation to AI")
     st.write("Model: Meta LLaMA 3.1")
 
