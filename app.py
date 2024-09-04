@@ -127,15 +127,14 @@ with tab2:
         choice = st.selectbox(
             "Choose a type of visualization",
             [
-                "Stock Price",
+                "Stock Price", "Volume",
+                "Moving Averages",
+                "Feature Correlations"
                 "Predictions vs Actual",
                 "Technical Indicators",
                 "Risk Levels",
                 "Feature Importance",
-                "Candlestick",
-                "Volume",
-                "Moving Averages",
-                "Feature Correlations"
+                "Candlestick"
             ]
         )
         
