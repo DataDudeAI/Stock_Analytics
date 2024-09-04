@@ -16,6 +16,14 @@ from logger import get_logger
 from dashboard import display_dashboard, display_profile,fetch_stock_profile,display_quarterly_results, display_shareholding_pattern, display_financial_ratios
 from llm import display_recommendation #analyze_stock_with_llm
 
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--token', required=True)
+args = parser.parse_args()
+
+API_TOKEN = args.token
+
 logger = get_logger(__name__)
 
 st.title("Stock Analysis and Prediction")
