@@ -198,7 +198,7 @@ elif page == "Ask to AI":
     st.write("Model: Meta LLaMA 3.1")
 
     # Input fields for the user
-    ticker = st.text_input("Enter Stock Ticker (e.g., AAPL, MSFT):")
+    ticker = st.text_input("Enter Stock Ticker (e.g., BHEL.NS, RELIANCE.NS):")
     start_date = st.date_input("Start Date", value=None)
     end_date = st.date_input("End Date", value=None)
 
