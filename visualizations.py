@@ -5,6 +5,22 @@ import numpy as np
 import matplotlib.dates as mdates
 from mplfinance.original_flavor import candlestick_ohlc
 import logging
+import plotly.express as px
+import streamlit as st
+# import matplotlib.pyplot as plt
+# import pandas as pd
+# import seaborn as sns
+# import numpy as np
+# import matplotlib.dates as mdates
+# from mplfinance.original_flavor import candlestick_ohlc
+# import logging
+# import plotly.express as px
+# import streamlit as st
+
+from logger import get_logger
+
+logger = get_logger(__name__)
+
 
 from logger import get_logger
 
@@ -22,6 +38,8 @@ def plot_stock_price(data: pd.DataFrame, ticker: str, indicators: dict = None,
         raise KeyError(f"Missing columns in data: {', '.join(missing_columns)}")
     
     logger.info(f"Plotting stock price for {ticker}.")
+    
+    # Matplotlib Plot
     plt.figure(figsize=(14, 7))
     plt.plot(data['Date'], data['Close'], label='Close Price', color=color, linestyle=line_style)
     
@@ -36,7 +54,18 @@ def plot_stock_price(data: pd.DataFrame, ticker: str, indicators: dict = None,
     plt.grid(True)
     plt.tight_layout()
     plt.xticks(rotation=45)
-    plt.show()
+    
+    # Render the plot using Streamlit
+    st.pyplot(plt)
+    
+    # Plotly Plot (interactive)
+    fig = px.line(data, x='Date', y='Close', title=title if title else f'{ticker} Stock Price')
+    if indicators:
+        for name, values in indicators.items():
+            fig.add_scatter(x=data['Date'], y=values, mode='lines', name=name)
+    
+    # Render the interactive plot using Streamlit
+    st.plotly_chart(fig)
 
 def plot_predictions(data: pd.DataFrame, predictions: pd.Series, ticker: str, 
                      actual_color='blue', predicted_color='red', line_style_actual='-', line_style_predicted='--'):
@@ -44,6 +73,8 @@ def plot_predictions(data: pd.DataFrame, predictions: pd.Series, ticker: str,
     Plot actual vs predicted stock prices with customization.
     """
     logger.info(f"Plotting actual vs predicted prices for {ticker}.")
+    
+    # Matplotlib Plot
     plt.figure(figsize=(14, 7))
     plt.plot(data['Date'], data['Close'], label='Actual Prices', color=actual_color, linestyle=line_style_actual)
     plt.plot(data['Date'], predictions, label='Predicted Prices', color=predicted_color, linestyle=line_style_predicted)
@@ -55,13 +86,24 @@ def plot_predictions(data: pd.DataFrame, predictions: pd.Series, ticker: str,
     plt.grid(True)
     plt.tight_layout()
     plt.xticks(rotation=45)
-    plt.show()
+    
+    # Render the plot using Streamlit
+    st.pyplot(plt)
+    
+    # Plotly Plot (interactive)
+    fig = px.line(data, x='Date', y='Close', title=f'{ticker} Actual vs Predicted Prices')
+    fig.add_scatter(x=data['Date'], y=predictions, mode='lines', name='Predicted Prices', line=dict(color=predicted_color))
+    
+    # Render the interactive plot using Streamlit
+    st.plotly_chart(fig)
 
 def plot_technical_indicators(data: pd.DataFrame, indicators: dict):
     """
     Plot technical indicators along with the stock price.
     """
     logger.info("Plotting stock price with technical indicators.")
+    
+    # Matplotlib Plot
     plt.figure(figsize=(14, 7))
     plt.plot(data['Date'], data['Close'], label='Close Price', color='blue')
     
@@ -75,7 +117,18 @@ def plot_technical_indicators(data: pd.DataFrame, indicators: dict):
     plt.grid(True)
     plt.tight_layout()
     plt.xticks(rotation=45)
-    plt.show()
+    
+    # Render the plot using Streamlit
+    st.pyplot(plt)
+    
+    # Plotly Plot (interactive)
+    fig = px.line(data, x='Date', y='Close', title='Stock Price with Technical Indicators')
+    for name, values in indicators.items():
+        fig.add_scatter(x=data['Date'], y=values, mode='lines', name=name)
+    
+    # Render the interactive plot using Streamlit
+    st.plotly_chart(fig)
+
 
 def plot_risk_levels(data: pd.DataFrame, risk_levels: pd.Series, cmap='coolwarm'):
     """
