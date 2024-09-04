@@ -12,7 +12,7 @@ from visualizations import (
 from sklearn.metrics import ConfusionMatrixDisplay
 from ui import display_analysis
 from logger import get_logger
-from dashboard import display_dashboard, display_profile,fetch_stock_profile,display_quarterly_results, display_shareholding_pattern,display_financial_ratios
+from dashboard import display_dashboard,fetch_stock_profile,display_quarterly_results, display_shareholding_pattern,display_financial_ratios
 
 logger = get_logger(__name__)
 
