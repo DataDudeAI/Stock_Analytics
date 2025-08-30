@@ -31,17 +31,49 @@ logger = get_logger(__name__)
 # logger.info("This is an info message")
 
 # Fetch historical data
+# def fetch_data(ticker, start_date, end_date):
+#     logger.info(f"Fetching data for {ticker} from {start_date} to {end_date}")
+#     data = yf.download(ticker, start=start_date, end=end_date)
+#     if data.empty:
+#         logger.warning(f"No data returned for {ticker}.")
+#         return None
+    
+#     # Reset index to ensure Date is a column
+#     data.reset_index(inplace=True)
+#     logger.info(f"Data fetched successfully for {ticker}.")
+#     return data
+
+
+
 def fetch_data(ticker, start_date, end_date):
     logger.info(f"Fetching data for {ticker} from {start_date} to {end_date}")
     data = yf.download(ticker, start=start_date, end=end_date)
+
     if data.empty:
         logger.warning(f"No data returned for {ticker}.")
         return None
-    
+
     # Reset index to ensure Date is a column
     data.reset_index(inplace=True)
+
+    # Flatten MultiIndex columns (e.g., ('Close','BHEL.NS') -> 'Close')
+    if isinstance(data.columns, pd.MultiIndex):
+        data.columns = [col[0] for col in data.columns]
+
     logger.info(f"Data fetched successfully for {ticker}.")
     return data
+
+
+
+
+
+
+
+
+
+
+
+
 
 # def calculate_indicators(data: pd.DataFrame) -> pd.DataFrame:
 #     logger.info("Calculating indicators with fixed parameters.")
@@ -838,6 +870,7 @@ def predict_future_prices(data, algorithm, days=10):
 #     except Exception as e:
 #         print(f"An error occurred while predicting future prices: {e}")
 #         return None, None, None
+
 
 
 
