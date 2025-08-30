@@ -235,13 +235,90 @@ def prepare_lstm_data(data):
     return np.array(X), np.array(y)
 
 
+# def predict_future_prices(data, algorithm, days=10):
+#     logger.info(f"Predicting future prices using {algorithm}.")
+    
+#     # Check if required columns are present
+#     required_columns = ['Open', 'SMA_50', 'EMA_50', 'RSI', 'MACD', 'MACD_Signal', 'Bollinger_High', 'Bollinger_Low', 'ATR', 'OBV']
+#     missing_columns = [col for col in required_columns if col not in data.columns]
+    
+#     if missing_columns:
+#         logger.error("Missing columns in data: %s", ', '.join(missing_columns))
+#         raise KeyError(f"Missing columns in data: {', '.join(missing_columns)}")
+    
+#     features = data[required_columns]
+#     target = data['Close']
+    
+#     X_train, X_test, y_train, y_test = train_test_split(features, target, test_size=0.2, random_state=42)
+    
+#     mae, r2 = None, None  # Initialize variables for metrics
+    
+#     if algorithm == 'Linear Regression':
+#         model = LinearRegression()
+        
+#     elif algorithm == 'Decision Tree':
+#         model = DecisionTreeRegressor()
+        
+#     elif algorithm == 'Random Forest':
+#         model = RandomForestRegressor(n_estimators=100)
+        
+#     elif algorithm == 'XGBoost':
+#         model = xgb.XGBRegressor(objective='reg:squarederror', eval_metric='rmse')
+        
+#     elif algorithm == 'CatBoost':
+#         model = CatBoostRegressor(learning_rate=0.1, depth=6, iterations=500, verbose=0)
+        
+#     elif algorithm == 'LSTM':
+#         X, y = prepare_lstm_data(data)
+#         model = Sequential()
+#         model.add(LSTM(50, return_sequences=True, input_shape=(X.shape[1], X.shape[2])))
+#         model.add(LSTM(50))
+#         model.add(Dense(1))
+#         model.compile(optimizer='adam', loss='mean_squared_error')
+#         model.fit(X, y, epochs=10, batch_size=32, verbose=0)
+#         last_data_point = np.expand_dims(X[-1], axis=0)
+#         future_prices = [model.predict(last_data_point)[0][0] for _ in range(days)]
+#         logger.info("Future prices predicted using LSTM model.")
+#         return future_prices, None, None, None, None
+        
+#     elif algorithm == 'ARIMA':
+#         model = ARIMA(data['Close'], order=(5, 1, 0))
+#         model_fit = model.fit()
+#         future_prices = model_fit.forecast(steps=days)
+        
+#     elif algorithm == 'SARIMA':
+#         model = SARIMAX(data['Close'], order=(5, 1, 0), seasonal_order=(1, 1, 0, 12))
+#         model_fit = model.fit()
+#         future_prices = model_fit.forecast(steps=days)
+        
+#     else:
+#         logger.error("Algorithm not recognized: %s", algorithm)
+#         return None, None, None, None, None
+
+#     if algorithm in ['Linear Regression', 'Decision Tree', 'Random Forest', 'XGBoost', 'CatBoost']:
+#         model.fit(X_train, y_train)
+#         predictions = model.predict(X_test)
+#         mae = mean_absolute_error(y_test, predictions)
+#         r2 = r2_score(y_test, predictions)
+        
+#         future_prices = []
+#         last_data_point = features.iloc[-1].values.reshape(1, -1)  # Ensure it's 2D
+        
+#         for _ in range(days):
+#             future_price = model.predict(last_data_point)[0]
+#             future_prices.append(future_price)
+#             last_data_point = last_data_point + 1  # Update last data point (simplified, better methods should be used)
+        
+#     logger.info("Future prices predicted using %s model.", algorithm)
+#     return future_prices, mae, r2, None, None
+
 def predict_future_prices(data, algorithm, days=10):
     logger.info(f"Predicting future prices using {algorithm}.")
-    
-    # Check if required columns are present
-    required_columns = ['Open', 'SMA_50', 'EMA_50', 'RSI', 'MACD', 'MACD_Signal', 'Bollinger_High', 'Bollinger_Low', 'ATR', 'OBV']
+
+    required_columns = ['Open', 'SMA_50', 'EMA_50', 'RSI', 'MACD', 
+                        'MACD_Signal', 'Bollinger_High', 'Bollinger_Low', 
+                        'ATR', 'OBV']
     missing_columns = [col for col in required_columns if col not in data.columns]
-    
     if missing_columns:
         logger.error("Missing columns in data: %s", ', '.join(missing_columns))
         raise KeyError(f"Missing columns in data: {', '.join(missing_columns)}")
@@ -250,24 +327,21 @@ def predict_future_prices(data, algorithm, days=10):
     target = data['Close']
     
     X_train, X_test, y_train, y_test = train_test_split(features, target, test_size=0.2, random_state=42)
-    
-    mae, r2 = None, None  # Initialize variables for metrics
-    
+
+    mae, r2 = None, None
+
+    # ---------------- Classical ML ----------------
     if algorithm == 'Linear Regression':
         model = LinearRegression()
-        
     elif algorithm == 'Decision Tree':
         model = DecisionTreeRegressor()
-        
     elif algorithm == 'Random Forest':
         model = RandomForestRegressor(n_estimators=100)
-        
     elif algorithm == 'XGBoost':
         model = xgb.XGBRegressor(objective='reg:squarederror', eval_metric='rmse')
-        
     elif algorithm == 'CatBoost':
         model = CatBoostRegressor(learning_rate=0.1, depth=6, iterations=500, verbose=0)
-        
+    # ---------------- Deep Learning ----------------
     elif algorithm == 'LSTM':
         X, y = prepare_lstm_data(data)
         model = Sequential()
@@ -277,41 +351,50 @@ def predict_future_prices(data, algorithm, days=10):
         model.compile(optimizer='adam', loss='mean_squared_error')
         model.fit(X, y, epochs=10, batch_size=32, verbose=0)
         last_data_point = np.expand_dims(X[-1], axis=0)
-        future_prices = [model.predict(last_data_point)[0][0] for _ in range(days)]
-        logger.info("Future prices predicted using LSTM model.")
+        future_prices = []
+        for _ in range(days):
+            pred = model.predict(last_data_point, verbose=0)[0][0]
+            future_prices.append(pred)
+            # append pred to sequence (sliding window)
+            last_data_point = np.roll(last_data_point, -1, axis=1)
+            last_data_point[0, -1, 0] = pred
         return future_prices, None, None, None, None
-        
+    # ---------------- Time Series ----------------
     elif algorithm == 'ARIMA':
-        model = ARIMA(data['Close'], order=(5, 1, 0))
+        model = ARIMA(target, order=(5, 1, 0))
         model_fit = model.fit()
-        future_prices = model_fit.forecast(steps=days)
-        
+        forecast = model_fit.forecast(steps=days)
+        mae = mean_absolute_error(target[-days:], forecast[:len(target[-days:])])
+        r2 = r2_score(target[-days:], forecast[:len(target[-days:])])
+        return forecast.tolist(), mae, r2, None, None
     elif algorithm == 'SARIMA':
-        model = SARIMAX(data['Close'], order=(5, 1, 0), seasonal_order=(1, 1, 0, 12))
+        model = SARIMAX(target, order=(5, 1, 0), seasonal_order=(1, 1, 0, 12))
         model_fit = model.fit()
-        future_prices = model_fit.forecast(steps=days)
-        
+        forecast = model_fit.forecast(steps=days)
+        mae = mean_absolute_error(target[-days:], forecast[:len(target[-days:])])
+        r2 = r2_score(target[-days:], forecast[:len(target[-days:])])
+        return forecast.tolist(), mae, r2, None, None
     else:
         logger.error("Algorithm not recognized: %s", algorithm)
         return None, None, None, None, None
 
-    if algorithm in ['Linear Regression', 'Decision Tree', 'Random Forest', 'XGBoost', 'CatBoost']:
-        model.fit(X_train, y_train)
-        predictions = model.predict(X_test)
-        mae = mean_absolute_error(y_test, predictions)
-        r2 = r2_score(y_test, predictions)
-        
-        future_prices = []
-        last_data_point = features.iloc[-1].values.reshape(1, -1)  # Ensure it's 2D
-        
-        for _ in range(days):
-            future_price = model.predict(last_data_point)[0]
-            future_prices.append(future_price)
-            last_data_point = last_data_point + 1  # Update last data point (simplified, better methods should be used)
-        
-    logger.info("Future prices predicted using %s model.", algorithm)
-    return future_prices, mae, r2, None, None
+    # ---------------- Train classical models ----------------
+    model.fit(X_train, y_train)
+    predictions = model.predict(X_test)
+    mae = mean_absolute_error(y_test, predictions)
+    r2 = r2_score(y_test, predictions)
 
+    # Generate simple future predictions using last row
+    future_prices = []
+    last_data_point = features.iloc[-1].values.reshape(1, -1)
+    for _ in range(days):
+        pred = model.predict(last_data_point)[0]
+        future_prices.append(pred)
+        # (⚠️ currently not updating indicators — just repeating last row with new Close)
+        last_data_point[0, 0] = pred   # replace "Open" or "Close"-proxy with prediction
+
+    logger.info("Future prices predicted using %s model.", algorithm)
+    return future_prices, mae, r2, predictions, y_test
 
 
 # def predict_future_prices(data, algorithm, days=10):
@@ -755,5 +838,6 @@ def predict_future_prices(data, algorithm, days=10):
 #     except Exception as e:
 #         print(f"An error occurred while predicting future prices: {e}")
 #         return None, None, None
+
 
 
