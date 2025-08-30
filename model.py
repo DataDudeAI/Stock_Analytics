@@ -56,12 +56,17 @@ def fetch_data(ticker, start_date, end_date):
     # Reset index to ensure Date is a column
     data.reset_index(inplace=True)
 
-    # Flatten MultiIndex columns (e.g., ('Close','BHEL.NS') -> 'Close')
+    # 🔑 Flatten MultiIndex columns if present
     if isinstance(data.columns, pd.MultiIndex):
-        data.columns = [col[0] for col in data.columns]
+        data.columns = [col[0] if col[0] != '' else col[1] for col in data.columns]
+
+    # Ensure "Date" is named correctly
+    if 'Date' not in data.columns:
+        data.rename(columns={data.columns[0]: 'Date'}, inplace=True)
 
     logger.info(f"Data fetched successfully for {ticker}.")
     return data
+
 
 
 
@@ -870,6 +875,7 @@ def predict_future_prices(data, algorithm, days=10):
 #     except Exception as e:
 #         print(f"An error occurred while predicting future prices: {e}")
 #         return None, None, None
+
 
 
 
