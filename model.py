@@ -43,48 +43,96 @@ def fetch_data(ticker, start_date, end_date):
     logger.info(f"Data fetched successfully for {ticker}.")
     return data
 
+# def calculate_indicators(data: pd.DataFrame) -> pd.DataFrame:
+#     logger.info("Calculating indicators with fixed parameters.")
+    
+#     # Check if required columns are present
+#     required_columns = ['Close', 'High', 'Low', 'Volume']
+#     missing_columns = [col for col in required_columns if col not in data.columns]
+#     if missing_columns:
+#         logger.error(f"Missing columns in data: {', '.join(missing_columns)}")
+#         raise KeyError(f"Missing columns in data: {', '.join(missing_columns)}")
+    
+#     # Calculate fixed moving averages
+#     ma_period = 50  # Fixed period for moving averages
+#     try:
+#         data[f'SMA_{ma_period}'] = data['Close'].rolling(window=ma_period).mean()
+#         data[f'EMA_{ma_period}'] = data['Close'].ewm(span=ma_period, adjust=False).mean()
+#     except Exception as e:
+#         logger.error(f"Error calculating moving averages: {e}")
+#         raise
+    
+#     # Calculate other indicators
+#     try:
+#         data['RSI'] = ta.momentum.RSIIndicator(data['Close']).rsi()
+#         macd = ta.trend.MACD(data['Close'])
+#         data['MACD'] = macd.macd()
+#         data['MACD_Signal'] = macd.macd_signal()
+#         bollinger = ta.volatility.BollingerBands(data['Close'])
+#         data['Bollinger_High'] = bollinger.bollinger_hband()
+#         data['Bollinger_Low'] = bollinger.bollinger_lband()
+#         data['ATR'] = ta.volatility.AverageTrueRange(data['High'], data['Low'], data['Close']).average_true_range()
+#         data['OBV'] = ta.volume.OnBalanceVolumeIndicator(data['Close'], data['Volume']).on_balance_volume()
+#     except Exception as e:
+#         logger.error(f"Error calculating other indicators: {e}")
+#         raise
+    
+#     # Debugging line to check the columns
+#     logger.debug("Columns after calculating indicators: %s", data.columns)
+    
+#     data = data.dropna()
+#     logger.info("Indicators calculated successfully.")
+#     return data
+
 def calculate_indicators(data: pd.DataFrame) -> pd.DataFrame:
     logger.info("Calculating indicators with fixed parameters.")
     
-    # Check if required columns are present
     required_columns = ['Close', 'High', 'Low', 'Volume']
     missing_columns = [col for col in required_columns if col not in data.columns]
     if missing_columns:
         logger.error(f"Missing columns in data: {', '.join(missing_columns)}")
         raise KeyError(f"Missing columns in data: {', '.join(missing_columns)}")
     
-    # Calculate fixed moving averages
-    ma_period = 50  # Fixed period for moving averages
+    # Ensure Series are 1D
+    close = pd.Series(data['Close'].values.flatten(), index=data.index)
+    high = pd.Series(data['High'].values.flatten(), index=data.index)
+    low = pd.Series(data['Low'].values.flatten(), index=data.index)
+    volume = pd.Series(data['Volume'].values.flatten(), index=data.index)
+
+    ma_period = 50
     try:
-        data[f'SMA_{ma_period}'] = data['Close'].rolling(window=ma_period).mean()
-        data[f'EMA_{ma_period}'] = data['Close'].ewm(span=ma_period, adjust=False).mean()
+        data[f'SMA_{ma_period}'] = close.rolling(window=ma_period).mean()
+        data[f'EMA_{ma_period}'] = close.ewm(span=ma_period, adjust=False).mean()
     except Exception as e:
         logger.error(f"Error calculating moving averages: {e}")
         raise
     
-    # Calculate other indicators
     try:
-        data['RSI'] = ta.momentum.RSIIndicator(data['Close']).rsi()
-        macd = ta.trend.MACD(data['Close'])
+        data['RSI'] = ta.momentum.RSIIndicator(close).rsi()
+        
+        macd = ta.trend.MACD(close)
         data['MACD'] = macd.macd()
         data['MACD_Signal'] = macd.macd_signal()
-        bollinger = ta.volatility.BollingerBands(data['Close'])
+        
+        bollinger = ta.volatility.BollingerBands(close)
         data['Bollinger_High'] = bollinger.bollinger_hband()
         data['Bollinger_Low'] = bollinger.bollinger_lband()
-        data['ATR'] = ta.volatility.AverageTrueRange(data['High'], data['Low'], data['Close']).average_true_range()
-        data['OBV'] = ta.volume.OnBalanceVolumeIndicator(data['Close'], data['Volume']).on_balance_volume()
+        
+        atr = ta.volatility.AverageTrueRange(high, low, close)
+        data['ATR'] = atr.average_true_range()
+        
+        obv = ta.volume.OnBalanceVolumeIndicator(close, volume)
+        data['OBV'] = obv.on_balance_volume()
     except Exception as e:
         logger.error(f"Error calculating other indicators: {e}")
         raise
-    
-    # Debugging line to check the columns
-    logger.debug("Columns after calculating indicators: %s", data.columns)
     
     data = data.dropna()
     logger.info("Indicators calculated successfully.")
     return data
 
 
+    
 # def calculate_indicators(data: pd.DataFrame, ma_type='SMA', ma_period=50) -> pd.DataFrame:
 #     logger.info(f"Calculating indicators with {ma_type} of period {ma_period}.")
     
@@ -707,4 +755,5 @@ def predict_future_prices(data, algorithm, days=10):
 #     except Exception as e:
 #         print(f"An error occurred while predicting future prices: {e}")
 #         return None, None, None
+
 
