@@ -34,25 +34,49 @@ def fetch_small_cap_tickers():
     ]
 
 # Get top movers
-def get_top_movers(tickers, days=1):
-    end_date = datetime.now()
-    start_date = end_date - timedelta(days=days)
+# def get_top_movers(tickers, days=1):
+#     end_date = datetime.now()
+#     start_date = end_date - timedelta(days=days)
     
+#     data = {}
+#     for ticker in tickers:
+#         try:
+#             df = yf.download(ticker, start=start_date, end=end_date)
+#             if not df.empty and 'Close' in df.columns:
+#                 df['Ticker'] = ticker
+#                 data[ticker] = df['Close'].pct_change().iloc[-1]  # Percentage change
+#         except Exception as e:
+#             st.error(f"Error fetching data for {ticker}: {e}")
+    
+#     sorted_data = sorted(data.items(), key=lambda x: x[1], reverse=True)
+#     top_gainers = sorted_data[:10]
+#     top_losers = sorted_data[-10:]
+    
+#     return top_gainers, top_losers
+
+
+def get_top_movers(tickers, days=5):
+    import yfinance as yf
     data = {}
+
     for ticker in tickers:
         try:
-            df = yf.download(ticker, start=start_date, end=end_date)
-            if not df.empty and 'Close' in df.columns:
-                df['Ticker'] = ticker
-                data[ticker] = df['Close'].pct_change().iloc[-1]  # Percentage change
+            df = yf.download(ticker, period=f"{days}d")
+            if not df.empty:
+                # compute % change from first to last close
+                pct_change = ((df['Close'].iloc[-1] - df['Close'].iloc[0]) / df['Close'].iloc[0]) * 100
+                data[ticker] = pct_change
         except Exception as e:
-            st.error(f"Error fetching data for {ticker}: {e}")
-    
+            print(f"Error fetching {ticker}: {e}")
+
+    # Now each value is a scalar float
     sorted_data = sorted(data.items(), key=lambda x: x[1], reverse=True)
-    top_gainers = sorted_data[:10]
-    top_losers = sorted_data[-10:]
-    
+
+    top_gainers = sorted_data[:5]
+    top_losers = sorted_data[-5:]
+
     return top_gainers, top_losers
+
 
 # Format DataFrame with color
 def format_df(df):
@@ -219,3 +243,4 @@ def display_financial_ratios(ticker):
 
 # if __name__ == "__main__":
 #     main()
+
